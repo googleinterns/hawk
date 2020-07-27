@@ -1,0 +1,8 @@
+/src/user/user
+/src/user/exec.skel.h
+/src/kern/vmlinux.h
+
+*.o
+*.a
+*.so
+
