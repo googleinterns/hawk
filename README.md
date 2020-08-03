@@ -135,4 +135,3 @@ The expected output is:
 This will have the same effect as following the steps 4 and 5.
 
  **Congrats**, you compiled your first BPF program! 🎉
-
