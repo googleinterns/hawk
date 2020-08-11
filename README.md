@@ -26,6 +26,7 @@ git clone https://github.com/Poppy22/hawk.git
 
 Get the latest version of the Linux kernel:
 ```
+cd  # in your home directory
 git clone https://github.com/torvalds/linux.git
 ```
 
