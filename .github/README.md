@@ -4,7 +4,7 @@
 
 ## 1. Overview
 
-In this short tutorial you will learn how to write and compile a simple **LSM BPF program** that performs **bpf_trace_printk**. The program will be loaded into the kernel and will print a string after the execution of each process.
+In this short tutorial you will learn how to write and compile a simple **LSM BPF program** that performs **bpf_trace_printk**. The program will be loaded into the kernel and will print a string after the execution of each process. Moreover, the program uses a BPF map of type PERCPU_ARRAY to keep track of the number of processes for each CPU, allowing userpace to print the total count each second.
 
 You need two C files, which can be found in */src*:
 
