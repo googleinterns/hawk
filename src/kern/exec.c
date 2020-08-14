@@ -16,6 +16,7 @@
 #include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
+#include <linux/limits.h>
 
 /*
  * Define a map structure to communicate with the userspace program.
@@ -29,6 +30,20 @@ struct bpf_map_def SEC("maps") output_map = {
 	.value_size = sizeof(int),
 	.max_entries = 1,
 };
+
+struct record_sample {
+	int ppid;
+	int pid;
+	int tgid;
+	char name[PATH_MAX];
+};
+
+struct {
+	__uint(type, BPF_MAP_TYPE_RINGBUF);
+	__uint(max_entries, 1 << 12);
+} ringbuf SEC(".maps");
+
+long flags = 0;
 
 SEC("lsm/bprm_committed_creds")
 int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
@@ -53,6 +68,32 @@ int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
 	// Increment the previous value, as a new process was executed on the
 	// current CPU.
 	(*val)++;
+
+	// Get information about the current process
+	int pid = bpf_get_current_pid_tgid() >> 32;
+	int tgid = (bpf_get_current_pid_tgid() << 32) >> 32;
+	int ppid = 1;
+	struct record_sample *sample;
+
+	sample = bpf_ringbuf_reserve(&ringbuf, sizeof(*sample), flags);
+	if (!sample) {
+		return 1;
+	}
+
+	// Get the parent pid
+	struct task_struct *task = (struct task_struct *)bpf_get_current_task();
+	struct task_struct *real_parent_task;
+	bpf_probe_read(&real_parent_task, sizeof(real_parent_task), &task->real_parent);
+	bpf_probe_read(&ppid, sizeof(ppid), &real_parent_task->pid);
+
+	// Get the executable name
+	bpf_get_current_comm(&sample->name, sizeof(sample->name));
+
+	sample->ppid = ppid;
+	sample->pid = pid;
+	sample->tgid = tgid;
+
+	bpf_ringbuf_submit(sample, flags);
 	return 0;
 }
 

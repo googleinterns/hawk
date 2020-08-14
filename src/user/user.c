@@ -17,12 +17,27 @@
 #include "exec.skel.h"
 #include <unistd.h>
 #include <bpf/bpf.h>
+#include <linux/limits.h>
+
+struct record_sample {
+	int ppid;
+	int pid;
+	int tgid;
+	char name[PATH_MAX];
+};
+
+static int process_sample(void *ctx, void *data, size_t len)
+{
+	struct record_sample *s = data;
+	printf("[RINGBUF] Sample ppid: %d, pid: %d, tgid: %d, name: %s\n", s->ppid, s->pid, s->tgid, s->name);
+	return 0;
+}
 
 int main(int ac, char **argv)
 {
 	int cpus_nb = libbpf_num_possible_cpus();
 	unsigned long long executions_nb_on_cpu[cpus_nb];
-	int map_fd;
+	int map_fd, ringbuf_fd;
 	int total_executions = 0;
 	unsigned long long key = 0;
 
@@ -45,6 +60,13 @@ int main(int ac, char **argv)
 	// get the fd for the map created in the BPF program
 	map_fd = bpf_map__fd(skel->maps.output_map);
 
+	ringbuf_fd = bpf_map__fd(skel->maps.ringbuf);
+	struct ring_buffer *ringbuf = ring_buffer__new(ringbuf_fd, process_sample, NULL, NULL);
+	if (!ringbuf) {
+		printf("Error creating ringbuff.\n");
+		return 0;
+	}
+
 	// count the total number of processes executed on the CPUs each second
 	while (1) {
 		/*
@@ -61,8 +83,11 @@ int main(int ac, char **argv)
 			total_executions += executions_nb_on_cpu[i];
 		}
 
-		printf("There were %d processes executed on %d CPUs\n", total_executions, cpus_nb);
+		printf("[COUNTER] There were %d processes executed on %d CPUs\n", total_executions, cpus_nb);
 		sleep(1);
+
+		// poll for new data
+		ring_buffer__poll(ringbuf, -1);
 	}
 
 	exec__destroy(skel);
