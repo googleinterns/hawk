@@ -40,7 +40,7 @@ struct record_sample {
 
 struct {
 	__uint(type, BPF_MAP_TYPE_RINGBUF);
-	__uint(max_entries, 1 << 12);
+	__uint(max_entries, 1 << 24);
 } ringbuf SEC(".maps");
 
 long flags = 0;
