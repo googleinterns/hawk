@@ -4,7 +4,7 @@
 
 ## 1. Overview
 
-In this short tutorial you will learn how to write and compile a simple **LSM BPF program** that performs **bpf_trace_printk**. The program will be loaded into the kernel and will print a string after the execution of each process. Moreover, the program uses a BPF map of type PERCPU_ARRAY to keep track of the number of processes for each CPU, allowing userpace to print the total count each second.
+In this short tutorial you will learn how to write and compile a simple **LSM BPF program** that performs **bpf_trace_printk**. The program will be loaded into the kernel and will print a string after the execution of each process. Moreover, the program uses a BPF map of type PERCPU_ARRAY to keep track of the number of processes for each CPU, allowing userpace to print the total count each second. Also, using the libbpf ringbuffer in the BPF program, userspace is able to pring information about processes, such as pid, ppid and executable name;
 
 You need two C files, which can be found in */src*:
 
@@ -127,6 +127,21 @@ The expected output is:
  ```
 
  Notice how some processes printed "hello", which is what the BPF program was meant to do.
+
+ Also, the counter and ringbuffer allow process tracking. When running the userspace program, instead of running the previous command, you can open a new terminal and write various commands there, such as ```ls```. The expected output is:
+
+ ```
+[COUNTER] There were 0 processes executed on 4 CPUs
+[RINGBUF] Sample ppid: 223, pid: 430, tgid: 430, name: ls
+[COUNTER] There were 1 processes executed on 4 CPUs
+[RINGBUF] Sample ppid: 223, pid: 431, tgid: 431, name: ls
+[COUNTER] There were 2 processes executed on 4 CPUs
+[RINGBUF] Sample ppid: 223, pid: 432, tgid: 432, name: ls
+[COUNTER] There were 3 processes executed on 4 CPUs
+[RINGBUF] Sample ppid: 223, pid: 433, tgid: 433, name: ls
+[RINGBUF] Sample ppid: 223, pid: 434, tgid: 434, name: ls
+[COUNTER] There were 5 processes executed on 4 CPUs
+```
 
  **Bonus**:
  Go to `script/` and run:
