@@ -29,17 +29,13 @@ struct record_sample {
 static int process_sample(void *ctx, void *data, size_t len)
 {
 	struct record_sample *s = data;
-	printf("[RINGBUF] Sample ppid: %d, pid: %d, tgid: %d, name: %s\n", s->ppid, s->pid, s->tgid, s->name);
+	printf("[PROCESS_INFO] ppid: %d, pid: %d, tgid: %d, name: %s\n", s->ppid, s->pid, s->tgid, s->name);
 	return 0;
 }
 
 int main(int ac, char **argv)
 {
-	int cpus_nb = libbpf_num_possible_cpus();
-	unsigned long long executions_nb_on_cpu[cpus_nb];
-	int map_fd, ringbuf_fd;
-	int total_executions = 0;
-	unsigned long long key = 0;
+	int ringbuf_fd;
 	struct ring_buffer *ringbuf;
 
 	struct exec *skel = NULL;
@@ -58,13 +54,6 @@ int main(int ac, char **argv)
 		return 0;
 	}
 
-	// get the fd for the map created in the BPF program
-	map_fd = bpf_map__fd(skel->maps.output_map);
-	if (map_fd < 0) {
-		printf("Error opening map.\n");
-		return 0;
-	}
-
 	ringbuf_fd = bpf_map__fd(skel->maps.ringbuf);
 	if (ringbuf_fd < 0) {
 		printf("Error accesing ringbuffer.\n");
@@ -77,25 +66,7 @@ int main(int ac, char **argv)
 		return 0;
 	}
 
-	// count the total number of processes executed on the CPUs each second
 	while (1) {
-		/*
-		 * Search for the element with key = 0 in the map.
-		 * values will point to output_map[key]
-		 */
-		bpf_map_lookup_elem(map_fd, &key, executions_nb_on_cpu);
-
-		// reset the counter to avoid counting duplicates
-		total_executions = 0;
-
-		// accumulate execution number for all CPUs
-		for (int i = 0; i < cpus_nb; i++) {
-			total_executions += executions_nb_on_cpu[i];
-		}
-
-		printf("[COUNTER] There were %d processes executed on %d CPUs\n", total_executions, cpus_nb);
-		sleep(1);
-
 		// poll for new data with a timeout of -1 ms, waiting indefinitely
 		ring_buffer__poll(ringbuf, -1);
 	}
