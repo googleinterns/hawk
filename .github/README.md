@@ -4,7 +4,7 @@
 
 ## 1. Overview
 
-In this short tutorial you will learn how to write and compile a simple **LSM BPF program** that performs **bpf_trace_printk**. The program will be loaded into the kernel and will print a string after the execution of each process. Moreover, the program uses a BPF map of type PERCPU_ARRAY to keep track of the number of processes for each CPU, allowing userpace to print the total count each second. Also, using the libbpf ringbuffer in the BPF program, userspace is able to pring information about processes, such as pid, ppid and executable name;
+In this short tutorial you will learn how to write and compile a simple **LSM BPF program** that uses the libbpf ringbuffer to track executed processes. Userspace is then able to print information about processes, such as pid, ppid and executable name.
 
 You need two C files, which can be found in */src*:
 
@@ -100,47 +100,12 @@ In src/user, run the following command:
 ```
 sudo ./user
 ```
-
-Open a new terminal and type:
-```
-sudo cat /sys/kernel/debug/tracing/trace
-```
-The expected output is:
-```
-# tracer: nop
-#
-# entries-in-buffer/entries-written: 3840/3840   #P:8
-#
-#                              _-----=> irqs-off
-#                             / _----=> need-resched
-#                            | / _---=> hardirq/softirq
-#                            || / _--=> preempt-depth
-#                            ||| /     delay
-#           TASK-PID   CPU#  ||||    TIMESTAMP  FUNCTION
-#              | |       |   ||||       |         |
-           <...>-1677604 [004] .... 693150.730117: 0: hello
-           <...>-1677607 [005] .... 693152.316666: 0: hello
-           <...>-1677614 [005] .... 693152.731883: 0: hello
-           <...>-1677620 [003] .... 693152.761767: 0: hello
-           <...>-1677621 [006] .... 693152.763810: 0: hello
-           <...>-1677621 [000] .... 693152.764590: 0: hello
- ```
-
- Notice how some processes printed "hello", which is what the BPF program was meant to do.
-
- Also, the counter and ringbuffer allow process tracking. When running the userspace program, instead of running the previous command, you can open a new terminal and write various commands there, such as ```ls```. The expected output is:
+Open a new terminal and write various commands, such as ```ls``` and ```cat```. The expected output is:
 
  ```
-[COUNTER] There were 0 processes executed on 4 CPUs
-[RINGBUF] Sample ppid: 223, pid: 430, tgid: 430, name: ls
-[COUNTER] There were 1 processes executed on 4 CPUs
-[RINGBUF] Sample ppid: 223, pid: 431, tgid: 431, name: ls
-[COUNTER] There were 2 processes executed on 4 CPUs
-[RINGBUF] Sample ppid: 223, pid: 432, tgid: 432, name: ls
-[COUNTER] There were 3 processes executed on 4 CPUs
-[RINGBUF] Sample ppid: 223, pid: 433, tgid: 433, name: ls
-[RINGBUF] Sample ppid: 223, pid: 434, tgid: 434, name: ls
-[COUNTER] There were 5 processes executed on 4 CPUs
+[PROCESS_INFO] ppid: 232, pid: 442, tgid: 442, name: ls
+[PROCESS_INFO] ppid: 232, pid: 443, tgid: 443, name: ls
+[PROCESS_INFO] ppid: 232, pid: 444, tgid: 444, name: cat
 ```
 
  **Bonus**:
@@ -149,5 +114,3 @@ The expected output is:
  ./compile_run.sh
  ```
 This will have the same effect as following the steps 4 and 5.
-
- **Congrats**, you compiled your first BPF program! 🎉
