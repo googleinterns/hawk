@@ -28,7 +28,7 @@ struct {
 long ringbuffer_flags = 0;
 
 SEC("lsm/bprm_committed_creds")
-int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
+void BPF_PROG(exec_audit, struct linux_binprm *bprm)
 {
 	int pid, tgid, ppid;
 	struct process_info *sample;
@@ -41,7 +41,7 @@ int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
 
 	sample = bpf_ringbuf_reserve(&ringbuf, sizeof(*sample), ringbuf_flags);
 	if (!sample)
-		return 1;
+		return;
 
 	// Get the parent pid
 	current_task = (struct task_struct *)bpf_get_current_task();
@@ -54,8 +54,7 @@ int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
 	sample->pid = pid;
 	sample->tgid = tgid;
 
-	bpf_ringbuf_submit(sample, ringbuffer_flags);
-	return 0;
+	bpf_ringbuf_submit(sample, ringbuf_flags);
 }
 
 char _license[] SEC("license") = "GPL";
