@@ -40,6 +40,7 @@ int main(int ac, char **argv)
 	int map_fd, ringbuf_fd;
 	int total_executions = 0;
 	unsigned long long key = 0;
+	struct ring_buffer *ringbuf;
 
 	struct exec *skel = NULL;
 	skel = exec__open_and_load();
@@ -59,9 +60,18 @@ int main(int ac, char **argv)
 
 	// get the fd for the map created in the BPF program
 	map_fd = bpf_map__fd(skel->maps.output_map);
+	if (map_fd < 0) {
+		printf("Error opening map.\n");
+		return 0;
+	}
 
 	ringbuf_fd = bpf_map__fd(skel->maps.ringbuf);
-	struct ring_buffer *ringbuf = ring_buffer__new(ringbuf_fd, process_sample, NULL, NULL);
+	if (ringbuf_fd < 0) {
+		printf("Error accesing ringbuffer.\n");
+		return 0;
+	}
+
+	ringbuf = ring_buffer__new(ringbuf_fd, process_sample, NULL, NULL);
 	if (!ringbuf) {
 		printf("Error creating ringbuff.\n");
 		return 0;
@@ -86,7 +96,7 @@ int main(int ac, char **argv)
 		printf("[COUNTER] There were %d processes executed on %d CPUs\n", total_executions, cpus_nb);
 		sleep(1);
 
-		// poll for new data
+		// poll for new data with a timeout of -1 ms, waiting indefinitely
 		ring_buffer__poll(ringbuf, -1);
 	}
 
