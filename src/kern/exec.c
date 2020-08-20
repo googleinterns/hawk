@@ -16,6 +16,7 @@
 #include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
+#include <bpf/bpf_core_read.h>
 #include <linux/limits.h>
 
 /*
@@ -43,7 +44,7 @@ struct {
 	__uint(max_entries, 1 << 24);
 } ringbuf SEC(".maps");
 
-long flags = 0;
+long ringbuf_flags = 0;
 
 SEC("lsm/bprm_committed_creds")
 int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
@@ -61,30 +62,29 @@ int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
 	 * keeps track of the CPUs.
 	 */
 	int *val = bpf_map_lookup_elem(&output_map, &key);
-	if (!val) {
+	if (!val)
 		return 0;
-	}
 
 	// Increment the previous value, as a new process was executed on the
 	// current CPU.
 	(*val)++;
 
-	// Get information about the current process
-	int pid = bpf_get_current_pid_tgid() >> 32;
-	int tgid = (bpf_get_current_pid_tgid() << 32) >> 32;
-	int ppid = 1;
+	int pid, tgid, ppid;
 	struct record_sample *sample;
+	struct task_struct *current_task;
 
-	sample = bpf_ringbuf_reserve(&ringbuf, sizeof(*sample), flags);
-	if (!sample) {
+	// Get information about the current proces
+	pid = bpf_get_current_pid_tgid() >> 32;
+	tgid = (bpf_get_current_pid_tgid() << 32) >> 32;
+	ppid = -1;
+
+	sample = bpf_ringbuf_reserve(&ringbuf, sizeof(*sample), ringbuf_flags);
+	if (!sample)
 		return 1;
-	}
 
 	// Get the parent pid
-	struct task_struct *task = (struct task_struct *)bpf_get_current_task();
-	struct task_struct *real_parent_task;
-	bpf_probe_read(&real_parent_task, sizeof(real_parent_task), &task->real_parent);
-	bpf_probe_read(&ppid, sizeof(ppid), &real_parent_task->pid);
+	current_task = (struct task_struct *)bpf_get_current_task();
+	ppid = BPF_CORE_READ(current_task, real_parent, pid);
 
 	// Get the executable name
 	bpf_get_current_comm(&sample->name, sizeof(sample->name));
@@ -93,7 +93,7 @@ int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
 	sample->pid = pid;
 	sample->tgid = tgid;
 
-	bpf_ringbuf_submit(sample, flags);
+	bpf_ringbuf_submit(sample, ringbuf_flags);
 	return 0;
 }
 
