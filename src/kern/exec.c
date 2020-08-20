@@ -18,29 +18,23 @@
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
 #include <linux/limits.h>
-
-struct record_sample {
-	int ppid;
-	int pid;
-	int tgid;
-	char name[PATH_MAX];
-};
+#include <process_info.h>
 
 struct {
 	__uint(type, BPF_MAP_TYPE_RINGBUF);
 	__uint(max_entries, 1 << 24);
 } ringbuf SEC(".maps");
 
-long ringbuf_flags = 0;
+long ringbuffer_flags = 0;
 
 SEC("lsm/bprm_committed_creds")
 int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
 {
 	int pid, tgid, ppid;
-	struct record_sample *sample;
+	struct process_info *sample;
 	struct task_struct *current_task;
 
-	// Get information about the current proces
+	// Get information about the current process
 	pid = bpf_get_current_pid_tgid() >> 32;
 	tgid = (bpf_get_current_pid_tgid() << 32) >> 32;
 	ppid = -1;
@@ -60,7 +54,7 @@ int BPF_PROG(test_void_hook, struct linux_binprm *bprm)
 	sample->pid = pid;
 	sample->tgid = tgid;
 
-	bpf_ringbuf_submit(sample, ringbuf_flags);
+	bpf_ringbuf_submit(sample, ringbuffer_flags);
 	return 0;
 }
 

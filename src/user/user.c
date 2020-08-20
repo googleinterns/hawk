@@ -18,17 +18,11 @@
 #include <unistd.h>
 #include <bpf/bpf.h>
 #include <linux/limits.h>
-
-struct record_sample {
-	int ppid;
-	int pid;
-	int tgid;
-	char name[PATH_MAX];
-};
+#include <process_info.h>
 
 static int process_sample(void *ctx, void *data, size_t len)
 {
-	struct record_sample *s = data;
+	struct process_info *s = data;
 	printf("[PROCESS_INFO] ppid: %d, pid: %d, tgid: %d, name: %s\n", s->ppid, s->pid, s->tgid, s->name);
 	return 0;
 }
@@ -56,7 +50,7 @@ int main(int ac, char **argv)
 
 	ringbuf_fd = bpf_map__fd(skel->maps.ringbuf);
 	if (ringbuf_fd < 0) {
-		printf("Error accesing ringbuffer.\n");
+		printf("Error accessing ringbuffer.\n");
 		return 0;
 	}
 
