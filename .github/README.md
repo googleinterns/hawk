@@ -59,13 +59,13 @@ Introduce aliases for the following commands:
 ```
 __kcc()
 {
-  clang -g -D__TARGET_ARCH_x86 -mlittle-endian -Wno-compare-distinct-pointer-types -O2 -target bpf -emit-llvm -c $1 -o - | llc -march=bpf -mcpu=v2 -filetype=obj -o "$(basename  $1 .c).o";
+  clang -g -D__TARGET_ARCH_x86 -mlittle-endian -Wno-compare-distinct-pointer-types -I../src/include -O2 -target bpf -emit-llvm -c $1 -o - | llc -march=bpf -mcpu=v2 -filetype=obj -o "$(basename  $1 .c).o";
 }
 alias kcc=__kcc
 
 __ucc ()
 {
-  gcc -g $1 -o "$(basename $1 .c)" -I$HOME/linux/tools/lib/bpf  $HOME/linux/tools/lib/bpf/libbpf.a -lelf -lz
+  gcc -g $1 -o "$(basename $1 .c)" -I../src/include -I$HOME/linux/tools/lib/bpf  $HOME/linux/tools/lib/bpf/libbpf.a -lelf -lz
 }
 alias ucc=__ucc
 ```
