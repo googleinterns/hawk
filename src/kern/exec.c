@@ -17,8 +17,7 @@
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>
-#include <linux/limits.h>
-#include <process_info.h>
+#include "process_info.h"
 
 struct {
 	__uint(type, BPF_MAP_TYPE_RINGBUF);
@@ -30,31 +29,28 @@ long ringbuffer_flags = 0;
 SEC("lsm/bprm_committed_creds")
 void BPF_PROG(exec_audit, struct linux_binprm *bprm)
 {
-	int pid, tgid, ppid;
-	struct process_info *sample;
+	long pid_tgid;
+	struct process_info *process;
 	struct task_struct *current_task;
 
-	// Get information about the current process
-	pid = bpf_get_current_pid_tgid() >> 32;
-	tgid = (bpf_get_current_pid_tgid() << 32) >> 32;
-	ppid = -1;
-
-	sample = bpf_ringbuf_reserve(&ringbuf, sizeof(*sample), ringbuf_flags);
-	if (!sample)
+	// Reserve space on the ringbuffer for the sample
+	process = bpf_ringbuf_reserve(&ringbuf, sizeof(*process), ringbuffer_flags);
+	if (!process)
 		return;
+	
+	// Get information about the current process
+	pid_tgid = bpf_get_current_pid_tgid();
+	process->pid = pid_tgid;
+	process->tgid = pid_tgid >> 32;
 
 	// Get the parent pid
 	current_task = (struct task_struct *)bpf_get_current_task();
-	ppid = BPF_CORE_READ(current_task, real_parent, pid);
+	process->ppid = BPF_CORE_READ(current_task, real_parent, pid);
 
 	// Get the executable name
-	bpf_get_current_comm(&sample->name, sizeof(sample->name));
+	bpf_get_current_comm(&process->name, sizeof(process->name));
 
-	sample->ppid = ppid;
-	sample->pid = pid;
-	sample->tgid = tgid;
-
-	bpf_ringbuf_submit(sample, ringbuf_flags);
+	bpf_ringbuf_submit(process, ringbuffer_flags);
 }
 
 char _license[] SEC("license") = "GPL";

@@ -17,8 +17,7 @@
 #include "exec.skel.h"
 #include <unistd.h>
 #include <bpf/bpf.h>
-#include <linux/limits.h>
-#include <process_info.h>
+#include "process_info.h"
 
 static int process_sample(void *ctx, void *data, size_t len)
 {
@@ -29,8 +28,8 @@ static int process_sample(void *ctx, void *data, size_t len)
 
 int main(int ac, char **argv)
 {
-	int ringbuf_fd;
-	struct ring_buffer *ringbuf;
+	int ringbuffer_fd;
+	struct ring_buffer *ringbuffer;
 
 	struct exec *skel = NULL;
 	skel = exec__open_and_load();
@@ -48,21 +47,23 @@ int main(int ac, char **argv)
 		return 0;
 	}
 
-	ringbuf_fd = bpf_map__fd(skel->maps.ringbuf);
-	if (ringbuf_fd < 0) {
-		printf("Error accessing ringbuffer.\n");
+	ringbuffer_fd = bpf_map__fd(skel->maps.ringbuf);
+	if (ringbuffer_fd < 0) {
+		printf("Error accessing the ringbuffer.\n");
+		exec__destroy(skel);
 		return 0;
 	}
 
-	ringbuf = ring_buffer__new(ringbuf_fd, process_sample, NULL, NULL);
-	if (!ringbuf) {
-		printf("Error creating ringbuff.\n");
+	ringbuffer = ring_buffer__new(ringbuffer_fd, process_sample, NULL, NULL);
+	if (!ringbuffer) {
+		printf("Error creating the ringbufffer.\n");
+		exec__destroy(skel);
 		return 0;
 	}
-
+	
 	while (1) {
 		// poll for new data with a timeout of -1 ms, waiting indefinitely
-		ring_buffer__poll(ringbuf, -1);
+		ring_buffer__poll(ringbuffer, -1);
 	}
 
 	exec__destroy(skel);

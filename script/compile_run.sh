@@ -21,4 +21,4 @@ bpftool gen skeleton ../src/kern/exec.o > ../src/user/exec.skel.h
 ucc ../src/user/user.c
 mv user ../src/user/user
 
-../src/user/user
+sudo ../src/user/user
