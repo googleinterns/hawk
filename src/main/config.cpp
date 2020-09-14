@@ -3,6 +3,10 @@
 #include "gflags/gflags.h"
 #include "config.hpp"
 
+extern "C" {
+	#include "exec_monitor.h"
+}
+
 /*
 	FLAGS SECTION
 */
@@ -37,7 +41,9 @@ void Config::detect_usecase(int argc, char *argv[])
 		exec_monitor_parse_args_run();
 		std::cout << "Monitoring process executions...\n";
 		std::cout << "PPID\tPID\tTGID\tPCOM\n";
+		
 		// Call the BPF program
+		exec_monitor();
 		return;
 	}
 

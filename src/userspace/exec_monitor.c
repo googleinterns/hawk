@@ -14,51 +14,51 @@
 */
 
 #include <bpf/libbpf.h>
-#include "exec.skel.h"
+#include "exec_monitor.skel.h"
 #include <unistd.h>
 #include <bpf/bpf.h>
-#include "process_info.h"
+#include "exec_monitor.h"
 
 static int process_sample(void *ctx, void *data, size_t len)
 {
 	struct process_info *s = data;
-	printf("[PROCESS_INFO] ppid: %d, pid: %d, tgid: %d, name: %s\n", s->ppid, s->pid, s->tgid, s->name);
+	printf("%d\t%d\t%d\t%s\n", s->ppid, s->pid, s->tgid, s->name);
 	return 0;
 }
 
-int main(int ac, char **argv)
+void exec_monitor()
 {
 	int ringbuffer_fd;
 	struct ring_buffer *ringbuffer;
 
-	struct exec *skel = NULL;
-	skel = exec__open_and_load();
+	struct exec_monitor *skel = NULL;
+	skel = exec_monitor__open_and_load();
 
 	if (!skel) {
 		printf("Error loading the program.\n");
-		exec__destroy(skel);
-		return 0;
+		exec_monitor__destroy(skel);
+		return;
 	}
 
-	int err = exec__attach(skel);
+	int err = exec_monitor__attach(skel);
 	if (err != 0) {
 		printf("Error attaching the program.\n");
-		exec__destroy(skel);
-		return 0;
+		exec_monitor__destroy(skel);
+		return;
 	}
 
 	ringbuffer_fd = bpf_map__fd(skel->maps.ringbuf);
 	if (ringbuffer_fd < 0) {
 		printf("Error accessing the ringbuffer.\n");
-		exec__destroy(skel);
-		return 0;
+		exec_monitor__destroy(skel);
+		return;
 	}
 
 	ringbuffer = ring_buffer__new(ringbuffer_fd, process_sample, NULL, NULL);
 	if (!ringbuffer) {
 		printf("Error creating the ringbufffer.\n");
-		exec__destroy(skel);
-		return 0;
+		exec_monitor__destroy(skel);
+		return;
 	}
 	
 	while (1) {
@@ -66,6 +66,5 @@ int main(int ac, char **argv)
 		ring_buffer__poll(ringbuffer, -1);
 	}
 
-	exec__destroy(skel);
-	return 0;
+	exec_monitor__destroy(skel);
 }
