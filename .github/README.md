@@ -9,11 +9,15 @@ HAWK is a userspace tool designed to facilitate the use of KRSI (Kernel Runtime 
 
 ## 2. Usecases
 
-Currently, HAWK supports the following usecases.
+HAWK has a mandatory flag that should be used whenever run, `--monitor`. The value specified shows the desired usecase, i.e. what should be monitored. Currently, HAWK supports the following usecase:
 
 ### Monitor process executions
 - prints information about processes, such as pid, ppid and executable name
-- how to use it: ```./hawk --exec```
+- how to use it: ```./hawk --monitor=exec```
+- optional flags:
+	- --ppid: comma-separated list; monitors only processes that have their ppid in the given list
+	- --name: comma-separated list; monitors only processed that have their executable name in the given list
+	- -n: number; monitors the first n processes that are executed after running hawk
 
 ## 3. Development setup
 
@@ -64,7 +68,7 @@ This will generate an executable called `hawk`. Running ```./hawk --help``` will
 
 To monitor process execution, run:
 ```
-./hawk --exec
+./hawk --monitor=exec
 ```
 Then open a new terminal and type commands (`ls` and `cat` for instance). The expected output is:
 ```
@@ -79,27 +83,29 @@ PPID    PID     TGID    PCOM
 
 If you want to add a new usecase, here's what you should do.
 
-1. Implement the kernelspace and userspace programs for that feature in C:
+1. Implement the kernelspace program for that usecase in C:
 
 - create **src/kernelspace/X_monitor.c** (the file that contains the BPF program), which should contain:
 	- SEC(str): shows what LSM hook to use to attach to the kernel
 	- void BPF_PROG(): the actual code for the BPF program that is executed
 
-- create **src/userspace/X_monitor.c** (the file that contains the userspace program that loads the BPF program into the kernel using libbpf), which should contain:
-	- X_monitor(): a primary function that loads the BPF program and polls for data for the ringbuffer
-	- a function that shows how the data from the ringbuffer should be consumed (for example, printing to stdout)
+2. Implement the userspace class for that usecase in C++ in **src/userspace**. This class contains the userspace program that loads the BPF program into the kernel using libbpf. It should contain:
+- a primary function that loads the BPF program and polls for data for the ringbuffer
+- a function that shows how the data from the ringbuffer should be consumed (for example, printing to stdout)
 
-- create **src/include/X_monitor.h** (the header file that contains, if needed, the user-defined data structures for that usecase and function headers)
+Should you need additional user defined structures for this usecase, create headers in **src/include**.
 
-2. Add X to available usecases in the main program (implemented in C++):
-**config.cpp**
-- include your external C header `X_monitor.h`
-- define the command line flags, along with validators, if needed
-	- there should be a primary flag that triggers the usecase (for example, `exec`) and optional flags that customize the output
-- in `detect_usecase()`, add a check if the primary flag for this usecase is set; don't forget to call the C function `X_monitor()` here, as this has the implementation of the usecase
-- if needed, add functions to parse the optional arguments for this usecase
+3. Add X to available usecases in the main program:
 
 **config.hpp**
-- add the necessary variables in the class `Config` for usecase X
-- add headers for the primary and helper functions used for usecase X
+- add the usecase to the enum `Usecase`
 - add validators headers for flags, if any
+
+**config.cpp**
+- define the command line flags, along with validators, if needed
+- define a function to parse the flags for this usecase
+
+**main.cpp**
+- add a case for this particular usecase in the `switch` instruction
+
+
