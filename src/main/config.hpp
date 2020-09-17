@@ -3,25 +3,27 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
-const char DELIMITER = ',';
+enum Usecase {
+	EXEC_MONITOR /* monitors process execution */
+};
 
 class Config
 {
-public:
-	Config();
-	void detect_usecase(int argc, char *argv[]);
-
 	// EXEC MONITOR
-	std::vector<int> ppid;
-	std::vector<std::string> name;
+	std::vector<int> ppid_list;
+	std::vector<std::string> name_list;
 	int n_proc; /* number of tasks to record */
 
-	void exec_monitor_parse_args_run();
+public:
+	Config();
+	static std::map<std::string, Usecase> usecase_map;
 
+	int exec_monitor_parse_args_run();
 
 	// VALIDATORS
-	static bool checkSaveAndExportFormat(const char *flagname, const std::string &value);
+	static bool check_save_and_export_format(const char *flagname, const std::string &value);
 };
 
 #endif

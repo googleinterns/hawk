@@ -27,5 +27,5 @@ set(BPFToolPath "/root/linux/tools/lib/bpf")
 list(TRANSFORM files APPEND "_user.o")
 
 add_executable(hawk ${SOURCE_FILES} ${files})
-target_include_directories(hawk PUBLIC ${gflags_INCLUDE_DIR} include)
+target_include_directories(hawk PUBLIC ${gflags_INCLUDE_DIR} include userspace)
 target_link_libraries(hawk gflags ${BPFToolPath}/libbpf.a elf z)
