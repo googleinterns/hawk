@@ -81,7 +81,7 @@ PPID    PID     TGID    PCOM
 
 ## 5. Contributing
 
-If you want to add a new usecase, here's what you should do.
+If you want to add a new usecase X, here's what you should do.
 
 1. Implement the kernelspace program for that usecase in C:
 
@@ -107,5 +107,3 @@ Should you need additional user defined structures for this usecase, create head
 
 **main.cpp**
 - add a case for this particular usecase in the `switch` instruction
-
-
