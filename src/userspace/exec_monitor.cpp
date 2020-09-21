@@ -31,7 +31,8 @@ static int process_sample(void *ctx, void *data, size_t len)
 	return 0;
 }
 
-ExecMonitor::ExecMonitor(Config config) {
+ExecMonitor::ExecMonitor(Config config)
+{
 	n_proc = config.n_proc;
 	ppid_list = config.ppid_list;
 	name_list = config.name_list;
@@ -79,3 +80,5 @@ int ExecMonitor::run()
 	exec_monitor__destroy(skel);
 	return 0;
 }
+
+int ExecMonitor::export_data() { return 0;} // TODO
