@@ -3,7 +3,6 @@
 #include <sstream>
 #include <gflags/gflags.h>
 #include "config.hpp"
-#include "exec_monitor.hpp"
 
 const char DELIMITER = ',';
 
@@ -11,25 +10,48 @@ const char DELIMITER = ',';
 	FLAGS SECTION
 */
 
+DEFINE_string(monitor, "exec", "Defines the usecase of the program. The default value is \"exec\", which monitors process executions.");
+DEFINE_validator(monitor, Config::check_monitor_type);
+
 // EXEC FLAG - MONITOR PROCESS EXECUTION
 DEFINE_string(ppid, "", "Specifies the parent pid(s) of the processes to monitor using comma-separated values.");
 DEFINE_string(name, "", "Specifies the name(s) of the processes to monitor using comma-separated values.");
 DEFINE_int32(n, 0, "Specifies the number of processes to monitor. The program will stop after n processes were executed.");
-DEFINE_int32(t, 0, "Specifies the number of seconds to monitor. The program will stop after t seconds.");
 
 // DATA EXPORT FLAGS
-DEFINE_string(save, "", "Specifies the format in which to save the terminal output in a separate file. Available formats are csv and protobuf.");
-DEFINE_validator(save, Config::check_save_and_export_format);
-DEFINE_string(export, "", "Specifies the format in which to export data in a separate file. Using export will not print to stdout. Available formats are csv and protobuf.");
-DEFINE_validator(export, Config::check_save_and_export_format);
+DEFINE_string(format, "", "Specifies the format in which to save the terminal output in a separate file. Available formats are csv and protobuf.");
+DEFINE_validator(format, Config::check_format_type);
+DEFINE_string(output_file, "", "Specifies the path to write the ouput or where to create the file, if it does not exist at that path.");
 
 /*
 	END OF FLAGS SECTION
 */
 
+std::map<std::string, Usecase> usecase_map = {
+    {"exec", EXEC_MONITOR}
+};
+
 Config::Config() {}
 
-int Config::exec_monitor_parse_args_run()
+int Config::parse_flags(int argc, char *argv[]) {
+	gflags::ParseCommandLineFlags(&argc, &argv, true);
+	int ret = 0;
+	
+	switch (usecase_map[FLAGS_monitor]) {
+	case Usecase::EXEC_MONITOR:
+		usecase = EXEC_MONITOR;
+		ret = exec_monitor_parse_args();
+		break;
+	default:
+		std::cerr << "Incorrect use. Run hawk --help for instructions.\n";
+		ret = -1;
+	}
+
+	gflags::ShutDownCommandLineFlags();
+	return ret;
+}
+
+int Config::exec_monitor_parse_args()
 {
 	if (!gflags::GetCommandLineFlagInfoOrDie("ppid").is_default)
 	{
@@ -59,16 +81,18 @@ int Config::exec_monitor_parse_args_run()
 	if (!gflags::GetCommandLineFlagInfoOrDie("n").is_default)
 		n_proc = (int)FLAGS_n;
 
-	std::cout << "Monitoring process executions...\n";
-	ExecMonitor exec_monitor;
-	int ret = exec_monitor.run();
-	return ret;
+	return 0;
 }
 
 /*
 	FLAG VALIDATORS
 */
-bool Config::check_save_and_export_format(const char *flagname, const std::string &value)
+bool Config::check_monitor_type(const char *flagname, const std::string &value)
+{
+	return usecase_map.count(value);
+}
+
+bool Config::check_format_type(const char *flagname, const std::string &value)
 {
 	// the default value has to be in the validator, otherwise error
 	return (value.compare("csv") == 0 or value.compare("protobuf") == 0 or value.compare("") == 0);

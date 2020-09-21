@@ -11,19 +11,22 @@ enum Usecase {
 
 class Config
 {
+private:
+	int exec_monitor_parse_args();
+
+public:
+	Config();
+	Usecase usecase;
+	int parse_flags(int argc, char *argv[]);
+
 	// EXEC MONITOR
 	std::vector<int> ppid_list;
 	std::vector<std::string> name_list;
 	int n_proc; /* number of tasks to record */
 
-public:
-	Config();
-	static std::map<std::string, Usecase> usecase_map;
-
-	int exec_monitor_parse_args_run();
-
-	// VALIDATORS
-	static bool check_save_and_export_format(const char *flagname, const std::string &value);
+	// FLAG VALIDATORS
+	static bool check_monitor_type(const char *flagname, const std::string &value);
+	static bool check_format_type(const char *flagname, const std::string &value);
 };
 
 #endif

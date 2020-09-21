@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include "../main/config.hpp"
 
 class ExecMonitor
 {
@@ -12,9 +13,7 @@ private:
 	int n_proc; /* number of tasks to record */
 
 public:
-	ExecMonitor();
-	ExecMonitor(std::vector<int> ppid_list, std::vector<std::string> name_list, int n_proc);
-
+	ExecMonitor(Config config);
 	int run();
 };
 

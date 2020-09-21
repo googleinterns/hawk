@@ -31,9 +31,11 @@ static int process_sample(void *ctx, void *data, size_t len)
 	return 0;
 }
 
-ExecMonitor::ExecMonitor() {}
-ExecMonitor::ExecMonitor(std::vector<int> ppid_list, std::vector<std::string> name_list, int n_proc) : 
-	ppid_list(ppid_list), name_list(name_list), n_proc(n_proc) {}
+ExecMonitor::ExecMonitor(Config config) {
+	n_proc = config.n_proc;
+	ppid_list = config.ppid_list;
+	name_list = config.name_list;
+}
 
 int ExecMonitor::run()
 {
