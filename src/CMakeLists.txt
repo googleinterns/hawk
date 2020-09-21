@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.13)
 
 project(Hawk)
 
+# TODO: improve cmake
 list(APPEND files "exec_monitor")
 
 foreach(filename ${files})

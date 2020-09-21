@@ -6,6 +6,7 @@
 
 class ExecMonitor
 {
+private:
 	std::vector<int> ppid_list;
 	std::vector<std::string> name_list;
 	int n_proc; /* number of tasks to record */
