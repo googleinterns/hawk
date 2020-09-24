@@ -41,10 +41,21 @@ git clone https://github.com/torvalds/linux.git
 
 **libbpf**
 
-Install libbpf with the following commands:
+Build libbpf:
 ```
-cd linux/tools/lib/bpf
-make
+make -C linux/tools/lib/bpf
+```
+
+**If you're running Hawk against a custom kernel**
+
+(If you're running it on the same machine where you build it, you don't need
+this bit. You just need the kernel tree to build libbpf and bpftool). Obviously
+you'll also have to build the kernel, and install it wherever you want to run
+Hawk - that's out of the scope of this document!
+
+```
+KERNEL_TREE=$PWD/linux # Remember this for later.
+make headers_install   # Generate UAPI headers to compile Hawk against.
 ```
 
 **[bpftool](https://www.mankier.com/8/bpftool)**
@@ -59,11 +70,24 @@ sudo make install
 ## 4. Compiling and running HAWK
 
 The compilation process is automated using cmake. After following the set-up instructions, go to `hawk/src` and run the following commands:
+
 ```
 mkdir build && cd build
-cmake ..
-make
 ```
+
+- To build for running on your local machine:
+
+  ```
+  cmake .. && make
+  ```
+
+- To build for running on your custom kernel:
+
+  ```
+  cmake -Dbpf_INCLUDE_DIR=$KERNEL_TREE/tools/lib/ -Dbpf_LIB_PATH=$KERNEL_TREE/tools/lib/bpf -Dlinux_INCLUDE_DIR=$KERNEL_TREE/usr/include/..
+  make
+  ```
+
 This will generate an executable called `hawk`. Running ```./hawk --help``` will show a list of usage instructions.
 
 To monitor process execution, run:
