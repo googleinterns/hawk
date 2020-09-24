@@ -17,7 +17,7 @@
 #include <bpf/bpf.h>
 #include <iostream>
 #include "exec_monitor.skel.h"
-#include "process_info.h"
+#include "process_info.hpp"
 #include "exec_monitor.hpp"
 
 static int process_sample(void *ctx, void *data, size_t len)
@@ -40,35 +40,30 @@ ExecMonitor::ExecMonitor(Config config)
 
 int ExecMonitor::run()
 {
-	struct exec_monitor *skel = NULL;
-	skel = exec_monitor__open_and_load();
-
+	struct exec_monitor *skel = exec_monitor__open_and_load();
+	struct ring_buffer *ringbuffer;
+	int ringbuffer_fd;
 
 	if (!skel) {
 		std::cerr << "[EXEC_MONITOR]: Error loading the eBPF program.\n";
-		exec_monitor__destroy(skel);
-		return -1;
+		goto out;
 	}
 
-	int err = exec_monitor__attach(skel);
-	if (err != 0) {
+	if (exec_monitor__attach(skel) != 0) {
 		std::cerr << "[EXEC_MONITOR]: Error attaching the eBPF program.\n";
-		exec_monitor__destroy(skel);
-		return -1;
+		goto out;
 	}
 
-	int ringbuffer_fd = bpf_map__fd(skel->maps.ringbuf);
+	ringbuffer_fd = bpf_map__fd(skel->maps.ringbuf);
 	if (ringbuffer_fd < 0) {
 		std::cerr << "[EXEC_MONITOR]: Error accessing the ringbuffer file descriptor.\n";
-		exec_monitor__destroy(skel);
-		return -1;
+		goto out;
 	}
 
-	struct ring_buffer *ringbuffer = ring_buffer__new(ringbuffer_fd, process_sample, NULL, NULL);
+	ringbuffer = ring_buffer__new(ringbuffer_fd, process_sample, NULL, NULL);
 	if (!ringbuffer) {
 		std::cerr << "[EXEC_MONITOR]: Error allocating the ringbufffer.\n";
-		exec_monitor__destroy(skel);
-		return -1;
+		goto out;
 	}
 	
 	printf("PPID\tPID\tTGID\tPCOM\n");
@@ -79,6 +74,11 @@ int ExecMonitor::run()
 
 	exec_monitor__destroy(skel);
 	return 0;
+
+out:
+	exec_monitor__destroy(skel);
+	return -1;
+
 }
 
 int ExecMonitor::export_data() { return 0;} // TODO

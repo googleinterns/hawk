@@ -1,5 +1,5 @@
-#ifndef PROCESS_INFO_H
-#define PROCESS_INFO_H
+#ifndef PROCESS_INFO_HPP
+#define PROCESS_INFO_HPP
 
 #include <linux/limits.h>
 

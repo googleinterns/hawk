@@ -1,17 +1,14 @@
 #include <iostream>
-#include <map>
 #include "config.hpp"
 #include "exec_monitor.hpp"
 
 int main(int argc, char *argv[])
 {
 	int ret = 0;
-	Config config;
+	Config config(argc, argv);
 
-	ret = config.parse_flags(argc, argv);
-	if (ret < 0) {
+	if (!config.is_input_valid())
 		return ret;
-	}
 
 	// the set usecase is certainly valid at this point
 	switch (config.usecase) {

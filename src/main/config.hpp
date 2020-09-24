@@ -1,5 +1,5 @@
-#ifndef CONFIG_H
-#define CONFIG_H
+#ifndef CONFIG_HPP
+#define CONFIG_HPP
 
 #include <string>
 #include <vector>
@@ -13,11 +13,12 @@ class Config
 {
 private:
 	int exec_monitor_parse_args();
+	bool valid; /* is set if the command line arguments are valid */
 
 public:
-	Config();
+	Config(int argc, char *argv[]);
 	Usecase usecase;
-	int parse_flags(int argc, char *argv[]);
+	bool is_input_valid();
 
 	// EXEC MONITOR
 	std::vector<int> ppid_list;

@@ -31,24 +31,24 @@ std::map<std::string, Usecase> usecase_map = {
     {"exec", EXEC_MONITOR}
 };
 
-Config::Config() {}
-
-int Config::parse_flags(int argc, char *argv[]) {
+Config::Config(int argc, char *argv[])
+{
 	gflags::ParseCommandLineFlags(&argc, &argv, true);
-	int ret = 0;
-	
+	valid = true;
+
 	switch (usecase_map[FLAGS_monitor]) {
 	case Usecase::EXEC_MONITOR:
 		usecase = EXEC_MONITOR;
-		ret = exec_monitor_parse_args();
+		if (exec_monitor_parse_args() < 0)
+			valid = false;
 		break;
-	default:
-		std::cerr << "Incorrect use. Run hawk --help for instructions.\n";
-		ret = -1;
 	}
 
 	gflags::ShutDownCommandLineFlags();
-	return ret;
+}
+
+bool Config::is_input_valid() {
+	return valid;
 }
 
 int Config::exec_monitor_parse_args()
@@ -58,7 +58,8 @@ int Config::exec_monitor_parse_args()
 		std::string token;
 		std::istringstream tokenStream(FLAGS_ppid);
 		int ppid;
-		while (std::getline(tokenStream, token, DELIMITER)) {
+		while (std::getline(tokenStream, token, DELIMITER))
+		{
 			try {
 				ppid = stoi(token);
 			}

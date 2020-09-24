@@ -1,5 +1,5 @@
-#ifndef EXEC_MONITOR_H
-#define EXEC_MONITOR_H
+#ifndef EXEC_MONITOR_HPP
+#define EXEC_MONITOR_HPP
 
 #include <vector>
 #include <string>
