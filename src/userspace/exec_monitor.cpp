@@ -65,7 +65,7 @@ int ExecMonitor::run()
 		std::cerr << "[EXEC_MONITOR]: Error allocating the ringbufffer.\n";
 		goto out;
 	}
-	
+
 	printf("PPID\tPID\tTGID\tPCOM\n");
 	while (1) {
 		// poll for new data with a timeout of -1 ms, waiting indefinitely
