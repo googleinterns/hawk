@@ -1,3 +1,6 @@
+#ifndef PROCESS_INFO_HPP
+#define PROCESS_INFO_HPP
+
 #include <linux/limits.h>
 
 struct process_info {
@@ -6,3 +9,5 @@ struct process_info {
 	int tgid;
 	char name[PATH_MAX];
 };
+
+#endif
