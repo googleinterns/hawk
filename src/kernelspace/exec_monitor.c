@@ -37,7 +37,7 @@ void BPF_PROG(exec_audit, struct linux_binprm *bprm)
 	process = bpf_ringbuf_reserve(&ringbuf, sizeof(*process), ringbuffer_flags);
 	if (!process)
 		return;
-	
+
 	// Get information about the current process
 	pid_tgid = bpf_get_current_pid_tgid();
 	process->pid = pid_tgid;
