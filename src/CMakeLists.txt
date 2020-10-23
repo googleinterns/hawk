@@ -10,7 +10,7 @@ list(APPEND files "exec_monitor")
 # Allow the user to specify a custom vmlinux to generate BTF info from - this
 # allows us to build BPF programs on hosts with older kernels.
 if(NOT(DEFINED VMLINUX_PATH))
-	set(VMLINUZ_PATH /sys/kernel/btf/vmlinu)
+	set(VMLINUX_PATH /sys/kernel/btf/vmlinux)
 endif()
 
 find_package(gflags REQUIRED)
