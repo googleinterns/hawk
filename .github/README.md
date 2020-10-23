@@ -157,7 +157,7 @@ mkdir build && cd build
 - To build for running on your custom kernel:
 
   ```
-  cmake -Dbpf_INCLUDE_DIR=$KERNEL_TREE/tools/lib/ -Dbpf_LIB_PATH=$KERNEL_TREE/tools/lib/bpf -Dlinux_INCLUDE_DIR=$KERNEL_TREE/usr/include/.. ..
+  cmake -Dbpf_INCLUDE_DIR=$KERNEL_TREE/tools/lib/ -Dbpf_LIB_PATH=$KERNEL_TREE/tools/lib/bpf -Dlinux_INCLUDE_DIR=$KERNEL_TREE/usr/include/ -DVMLINUX_PATH=$KERNEL_TREE/vmlinux ..
   make
   ```
 
