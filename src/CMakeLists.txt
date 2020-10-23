@@ -13,6 +13,10 @@ if(NOT(DEFINED VMLINUX_PATH))
 	set(VMLINUZ_PATH /sys/kernel/btf/vmlinu)
 endif()
 
+find_package(gflags REQUIRED)
+find_package(bpf REQUIRED)
+find_package(KernelHeaders REQUIRED)
+
 foreach(filename ${files})
 	add_custom_command(
 		COMMENT "Building"
@@ -25,10 +29,6 @@ foreach(filename ${files})
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 	)
 endforeach()
-
-find_package(gflags REQUIRED)
-find_package(bpf REQUIRED)
-find_package(KernelHeaders REQUIRED)
 
 set(SOURCE_FILES
         "main/config.cpp"
