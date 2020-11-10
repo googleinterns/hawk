@@ -54,6 +54,35 @@ sudo apt install -y \
   libcap-dev
 ```
 
+Enable the following config options for `hawk` to work:
+
+```
+make defconfig && make kvm_guest.config && \
+  scripts/config \
+  -e BPF_SYSCALL \
+  -e BPF_LSM \
+  -e BPF_JIT \
+  -e DEBUG_INFO \
+  -e DEBUG_INFO_BTF \
+  -e FTRACE \
+  -e DYNAMIC_FTRACE \
+  -e FUNCTION_TRACER && \
+  make olddefconfig
+```
+
+If you are doing kernel debugging, you may additionally want to enable:
+
+```
+scripts/config \
+  -e DEBUG_ATOMIC_SLEEP \
+  -e KASAN \
+  -e KMEMLEAK \
+  -e PROVE_LOCKING \
+  -e SECURITYFS \
+  -e IKCONFIG_PROC &&
+  make olddefconfig
+```
+
 **libbpf**
 
 Build libbpf:
