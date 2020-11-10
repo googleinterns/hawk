@@ -22,8 +22,9 @@ HAWK has a mandatory flag that should be used whenever run, `--monitor`. The val
 ## 3. Development setup
 
 Start by cloning this repo:
+
 ```
-git clone https://github.com/Poppy22/hawk.git
+git clone https://github.com/googleinterns/hawk
 ```
 
 **Install [gflags](https://github.com/gflags/gflags)**
