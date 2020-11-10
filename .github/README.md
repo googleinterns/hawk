@@ -39,6 +39,21 @@ cd  # in your home directory
 git clone https://github.com/torvalds/linux.git
 ```
 
+If you are compiling the kernel for the first time, install some of the packages required:
+
+On a Debian/Ubuntu distribution:
+
+```
+sudo apt install -y \
+  qtbase5-dev \
+  pkg-config \
+  bison \
+  flex \
+  libelf-dev \
+  libssl-dev \
+  libcap-dev
+```
+
 **libbpf**
 
 Build libbpf:
