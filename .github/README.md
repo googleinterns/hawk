@@ -83,6 +83,34 @@ scripts/config \
   make olddefconfig
 ```
 
+It's also recommended to build and install the latest `clang` and `pahole`, especially if
+you are working on the latest Linux kernel:
+
+**clang**
+
+```
+sudo apt install -y cmake && \
+git clone https://github.com/llvm/llvm-project.git  && cd llvm-project && \
+mkdir build && \
+cd build && \
+cmake -DLLVM_ENABLE_PROJECTS=clang -DCMAKE_BUILD_TYPE=Release -G "Unix Makefiles" ../llvm && \
+make -j && \
+sudo make install
+```
+
+**pahole**
+
+```
+sudo apt install -y libdwarf-dev libdw-dev &&
+git clone git://git.kernel.org/pub/scm/devel/pahole/pahole.git && \
+cd pahole && \
+mkdir build && \
+cd build && \
+cmake -DCMAKE_INSTALL_PREFIX=/usr -D__LIB=lib .. && \
+make -j && \
+sudo make install
+```
+
 **libbpf**
 
 Build libbpf:
